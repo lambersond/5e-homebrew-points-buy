@@ -12,7 +12,7 @@
   :root {
     --foreground-rgb: 208,208, 208;
     --background-start-rgb: 42, 42, 42;
-    --background-end-rgb: 0, 0, 0;
+    --background-end-rgb: 42, 0, 0;
   }
 }
 

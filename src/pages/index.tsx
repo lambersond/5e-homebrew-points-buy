@@ -12,29 +12,33 @@ const abilities: Stat[] = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']
 
 export default function Home() {
   const [stats, setStats] = useState<Stats>({
-    STR: 8,
-    DEX: 8,
-    CON: 8,
-    INT: 8,
-    WIS: 8,
-    CHA: 8,
+    STR: 9,
+    DEX: 9,
+    CON: 9,
+    INT: 9,
+    WIS: 9,
+    CHA: 9,
     left: 27,
   })
 
   const handleStatChange = useCallback((stat: Stat) => ({ target: { value }}: ChangeEvent<HTMLInputElement>) => {
     const newValue = Math.floor(Number(value))
-    console.log(newValue)
 
     if (newValue < 8 || newValue > 17) return
 
     const multiplier = newValue > 15 ? 2 : 1
 
-    setStats((prev) => prev.left === 0 ? prev : {
+    setStats((prev) => {
+      const remaining = prev.left - ((newValue - prev[stat]) * multiplier)
+
+      if (remaining < 0) return prev
+
+      return {
         ...prev,
         [stat]: newValue,
-        left: prev.left - ((newValue - prev[stat]) * multiplier),
+        left:remaining,
       }
-    )
+  })
   }, [])
 
   return (
