@@ -1,0 +1,1 @@
+export { PointsBuy } from './points-buy'
