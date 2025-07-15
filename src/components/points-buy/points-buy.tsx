@@ -18,12 +18,18 @@ export function PointsBuy() {
     left: maxPoints,
   })
   
+  const costFor = useCallback((val: number) => {
+    const base = Math.max(0, Math.min(val, 14) - 8)
+    const premium = Math.max(0, val - 14) * 2
+    return base + premium
+  }, [])
+
   const handleStatChange = useCallback<OnStatChange>((stat) => ({ target: { value }}) => {
     const newValue = Math.floor(Number(value))
-    const multiplier = newValue > 15 ? 2 : 1
+    if (newValue < minStat || newValue > maxStat) return
 
     setStats((prev) => {
-      const remaining = prev.left - ((newValue - prev[stat]) * multiplier)
+      const remaining = prev.left - (costFor(newValue) - costFor(prev[stat]))
 
       if (remaining < 0) return prev
 
@@ -33,7 +39,7 @@ export function PointsBuy() {
         left: remaining,
       }
     })
-  }, [])
+  }, [costFor])
 
   return (
     <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-6 lg:text-left">
