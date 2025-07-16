@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import type { Ability, OnStatChange, Stats,  } from './types'
+import type { Ability, OnStatChange, Stats } from './types'
 
 const abilities: Ability[] = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']
 const baseStat = 9
@@ -17,6 +17,15 @@ export function PointsBuy() {
     CHA: baseStat,
     left: maxPoints,
   })
+
+  const [inputs, setInputs] = useState<Record<Ability, string>>({
+    STR: String(baseStat),
+    DEX: String(baseStat),
+    CON: String(baseStat),
+    INT: String(baseStat),
+    WIS: String(baseStat),
+    CHA: String(baseStat),
+  })
   
   const costFor = useCallback((val: number) => {
     const base = Math.max(0, Math.min(val, 14) - 8)
@@ -24,15 +33,18 @@ export function PointsBuy() {
     return base + premium
   }, [])
 
-  const handleStatChange = useCallback<OnStatChange>((stat) => ({ target: { value }}) => {
-    const newValue = Math.floor(Number(value))
-    if (newValue < minStat || newValue > maxStat) return
+  const commitStat = useCallback((stat: Ability, raw: number) => {
+    const newValue = Math.max(minStat, Math.min(maxStat, raw))
 
     setStats((prev) => {
       const remaining = prev.left - (costFor(newValue) - costFor(prev[stat]))
 
-      if (remaining < 0) return prev
+      if (remaining < 0) {
+        setInputs((curr) => ({ ...curr, [stat]: String(prev[stat]) }))
+        return prev
+      }
 
+      setInputs((curr) => ({ ...curr, [stat]: String(newValue) }))
       return {
         ...prev,
         [stat]: newValue,
@@ -40,6 +52,26 @@ export function PointsBuy() {
       }
     })
   }, [costFor])
+
+  const handleStatChange = useCallback<OnStatChange>((stat) => ({ target: { value }}) => {
+    setInputs((curr) => ({ ...curr, [stat]: value }))
+
+    const numeric = Math.floor(Number(value))
+    if (Number.isNaN(numeric)) return
+
+    if (Math.abs(numeric - stats[stat]) === 1) {
+      commitStat(stat, numeric)
+    }
+  }, [commitStat, stats])
+
+  const handleStatBlur = useCallback((stat: Ability) => () => {
+    const numeric = Math.floor(Number(inputs[stat]))
+    if (Number.isNaN(numeric)) {
+      setInputs((curr) => ({ ...curr, [stat]: String(stats[stat]) }))
+      return
+    }
+    commitStat(stat, numeric)
+  }, [commitStat, inputs, stats])
 
   return (
     <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-6 lg:text-left">
@@ -50,11 +82,12 @@ export function PointsBuy() {
           <input
             type="number"
             className="w-1/2 min-w-36 text-2xl font-bold text-left rounded-lg bg-transparent border border-solid pl-1"
-            value={stats[ability]}
+            value={inputs[ability]}
             max={maxStat}
             min={minStat}
             onChange={handleStatChange(ability)}
-            />
+            onBlur={handleStatBlur(ability)}
+          />
         </div>
       ))}
     </div>
